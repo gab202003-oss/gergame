@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Picker</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a28;
+    --border: #2a2a44;
+    --accent: #00f5c4;
+    --accent2: #7b2fff;
+    --accent3: #ff2f7b;
+    --text: #e8e8f0;
+    --muted: #6666aa;
+    --danger: #ff4466;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .tab-btn {
+    padding: 16px 36px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--muted);
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(0,245,196,0.05);
+  }
+
+  .tab-btn .lock-icon {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 10px;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    position: relative;
+    z-index: 1;
+    min-height: calc(100vh - 53px);
+  }
+  .screen.active { display: block; }
+
+  /* ── LOGIN OVERLAY ── */
+  .login-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 53px);
+    padding: 40px;
+  }
+
+  .login-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent2);
+    padding: 48px;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+  }
+
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 20%; right: 20%;
+    height: 3px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  .login-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 3px;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 36px;
+    letter-spacing: 1px;
+  }
+
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: 'Orbitron', monospace;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    min-height: 18px;
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .login-btn:hover {
+    background: #00ffd4;
+    box-shadow: 0 0 30px rgba(0,245,196,0.4);
+  }
+
+  /* ── ADMIN PANEL ── */
+  .admin-panel {
+    padding: 48px;
+    max-width: 900px;
+  }
+
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+  }
+
+  .admin-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: 4px;
+  }
+
+  .admin-title span {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  .logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* ── GAME GRID ── */
+  .grid-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .grid-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid-header div {
+    padding: 14px 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    border-right: 1px solid var(--border);
+  }
+
+  .grid-header div:last-child { border-right: none; }
+
+  .grid-body { }
+
+  .grid-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px;
+    border-bottom: 1px solid rgba(42,42,68,0.5);
+    align-items: center;
+    transition: background 0.15s;
+  }
+
+  .grid-row:hover { background: rgba(0,245,196,0.03); }
+  .grid-row:last-child { border-bottom: none; }
+
+  .grid-row .order-cell {
+    padding: 14px 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    font-weight: 700;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .grid-row .game-cell {
+    padding: 8px 16px;
+    border-right: 1px solid var(--border);
+  }
+
+  .game-input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
+    padding: 8px 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    outline: none;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .game-input:focus {
+    background: rgba(0,245,196,0.05);
+    border-color: var(--accent);
+  }
+
+  .game-input::placeholder { color: var(--muted); font-style: italic; }
+
+  .del-cell {
+    padding: 0 10px;
+    text-align: center;
+  }
+
+  .del-btn {
+    background: transparent;
+    border: none;
+    color: var(--border);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: color 0.2s;
+    padding: 6px;
+  }
+
+  .del-btn:hover { color: var(--danger); }
+
+  .add-row-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: none;
+    border-top: 1px dashed var(--border);
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .add-row-btn:hover { color: var(--accent); background: rgba(0,245,196,0.03); }
+
+  .save-notice {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .save-notice span { color: var(--accent); }
+
+  /* ── PICKER SCREEN ── */
+  .picker-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 53px);
+    padding: 40px;
+    text-align: center;
+  }
+
+  .picker-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .game-display {
+    position: relative;
+    margin-bottom: 40px;
+  }
+
+  .game-name {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(28px, 6vw, 72px);
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1.1;
+    position: relative;
+    animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.96);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  .game-name-glow {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(ellipse at center, rgba(0,245,196,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .progress-bar-wrap {
+    width: 300px;
+    height: 2px;
+    background: var(--border);
+    margin: 0 auto 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: progress 5s linear infinite;
+    transform-origin: left;
+  }
+
+  @keyframes progress {
+    from { width: 0%; }
+    to { width: 100%; }
+  }
+
+  .picker-meta {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  .picker-meta strong {
+    color: var(--accent2);
+    font-family: 'Orbitron', monospace;
+  }
+
+  .empty-state {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  .empty-state span {
+    display: block;
+    font-size: 11px;
+    margin-top: 8px;
+    opacity: 0.6;
+  }
+
+  /* Corner decorations */
+  .corner-deco {
+    position: fixed;
+    width: 60px; height: 60px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.3;
+  }
+  .corner-deco.tl { top: 60px; left: 0; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .corner-deco.br { bottom: 0; right: 0; border-bottom: 1px solid var(--accent2); border-right: 1px solid var(--accent2); }
+</style>
+</head>
+<body>
+
+<div class="corner-deco tl"></div>
+<div class="corner-deco br"></div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('picker')">🎮 Game Picker</button>
+  <button class="tab-btn" onclick="showTab('admin')"><span class="lock-icon">🔒</span> Admin</button>
+</div>
+
+<!-- PICKER SCREEN -->
+<div class="screen active" id="screen-picker">
+  <div class="picker-screen">
+    <div class="picker-label">▶ Now Playing ◀</div>
+
+    <div class="game-display" id="gameDisplay">
+      <div class="game-name-glow"></div>
+      <div class="game-name" id="gameName">—</div>
+    </div>
+
+    <div class="progress-bar-wrap" id="progressWrap" style="display:none">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="picker-meta" id="pickerMeta"></div>
+  </div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div class="screen" id="screen-admin">
+
+  <!-- Login overlay -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <div class="login-title">ADMIN ACCESS</div>
+      <div class="login-sub">// secure terminal — enter credentials</div>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="usernameInput" placeholder="admin" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="passwordInput" placeholder="••••••••" autocomplete="off">
+      </div>
+      <div class="error-msg" id="loginError"></div>
+      <button class="login-btn" onclick="doLogin()">Access Panel</button>
+    </div>
+  </div>
+
+  <!-- Admin panel -->
+  <div class="admin-panel" id="adminPanel" style="display:none">
+    <div class="admin-header">
+      <div>
+        <div class="admin-title">GAME LIST<span>// manage your favorite games</span></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+
+    <div class="grid-container">
+      <div class="grid-header">
+        <div>#</div>
+        <div>Game Title</div>
+        <div>Remove</div>
+      </div>
+      <div class="grid-body" id="gridBody"></div>
+      <button class="add-row-btn" onclick="addRow()">+ Add Game</button>
+    </div>
+
+    <div class="save-notice">Changes are <span>saved automatically</span> and reflected on the picker screen.</div>
+  </div>
+</div>
+
+<script>
+  // ── STATE ──
+  let loggedIn = false;
+  let games = JSON.parse(localStorage.getItem('games') || '["","","","",""]');
+  let pickerInterval = null;
+  let currentGame = '';
+  let currentGameKey = null; // for animation reset
+
+  // ── TABS ──
+  function showTab(tab) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-' + tab).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    if (tab === 'picker') startPicker();
+    else stopPicker();
+  }
+
+  // ── LOGIN ──
+  function doLogin() {
+    const u = document.getElementById('usernameInput').value.trim();
+    const p = document.getElementById('passwordInput').value.trim();
+    if (u === 'admin' && p === 'admin123') {
+      loggedIn = true;
+      document.getElementById('loginError').textContent = '';
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      renderGrid();
+    } else {
+      document.getElementById('loginError').textContent = '⚠ Invalid credentials';
+      document.getElementById('passwordInput').value = '';
+    }
+  }
+
+  function doLogout() {
+    loggedIn = false;
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('passwordInput').value = '';
+  }
+
+  // Allow Enter key on login
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('screen-admin').classList.contains('active') && !loggedIn) {
+      doLogin();
+    }
+  });
+
+  // ── GRID ──
+  function saveGames() {
+    localStorage.setItem('games', JSON.stringify(games));
+  }
+
+  function renderGrid() {
+    const body = document.getElementById('gridBody');
+    body.innerHTML = '';
+    games.forEach((g, i) => {
+      const row = document.createElement('div');
+      row.className = 'grid-row';
+      row.innerHTML = `
+        <div class="order-cell">${i + 1}</div>
+        <div class="game-cell">
+          <input class="game-input" type="text" value="${escHtml(g)}" placeholder="Enter game name..." 
+            oninput="updateGame(${i}, this.value)" />
+        </div>
+        <div class="del-cell">
+          <button class="del-btn" onclick="deleteRow(${i})" title="Remove">✕</button>
+        </div>`;
+      body.appendChild(row);
+    });
+  }
+
+  function escHtml(s) { return s.replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+  function updateGame(i, val) {
+    games[i] = val;
+    saveGames();
+  }
+
+  function addRow() {
+    games.push('');
+    saveGames();
+    renderGrid();
+    // Focus new input
+    const inputs = document.querySelectorAll('.game-input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }
+
+  function deleteRow(i) {
+    games.splice(i, 1);
+    saveGames();
+    renderGrid();
+  }
+
+  // ── PICKER ──
+  function getFilledGames() {
+    return games.filter(g => g.trim() !== '');
+  }
+
+  function pickGame() {
+    const list = getFilledGames();
+    if (!list.length) {
+      document.getElementById('gameName').textContent = '—';
+      document.getElementById('progressWrap').style.display = 'none';
+      document.getElementById('pickerMeta').textContent = '';
+      return;
+    }
+
+    let pick;
+    if (list.length === 1) {
+      pick = list[0];
+    } else {
+      // Avoid same pick twice in a row
+      let attempts = 0;
+      do {
+        pick = list[Math.floor(Math.random() * list.length)];
+        attempts++;
+      } while (pick === currentGame && attempts < 10);
+    }
+
+    currentGame = pick;
+    document.getElementById('progressWrap').style.display = 'block';
+
+    // Restart animation by re-inserting element
+    const nameEl = document.getElementById('gameName');
+    const newEl = nameEl.cloneNode(false);
+    newEl.id = 'gameName';
+    newEl.textContent = pick;
+    nameEl.replaceWith(newEl);
+
+    // Restart progress bar
+    const pb = document.getElementById('progressBar');
+    const newPb = pb.cloneNode(false);
+    newPb.id = 'progressBar';
+    pb.replaceWith(newPb);
+
+    document.getElementById('pickerMeta').innerHTML =
+      `<strong>${list.length}</strong> games in the list &nbsp;·&nbsp; changing every 5 seconds`;
+  }
+
+  function startPicker() {
+    stopPicker();
+    pickGame();
+    pickerInterval = setInterval(pickGame, 5000);
+  }
+
+  function stopPicker() {
+    if (pickerInterval) {
+      clearInterval(pickerInterval);
+      pickerInterval = null;
+    }
+  }
+
+  // Start picker on load
+  startPicker();
+</script>
+</body>
+</html>
